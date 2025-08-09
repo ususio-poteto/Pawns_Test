@@ -4,7 +4,7 @@ on:
   # masterへのPRマージをトリガーとしてワークフローを開始する
   pull_request:
     branches:
-      - master
+      - mian
     types: [closed]
 
   # Debug用にActionsメニューからGUIでActionを走らせることを許容する
