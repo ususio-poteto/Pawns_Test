@@ -1,72 +1,41 @@
-name: WebGL Build
+name: Build Unity WebGL and Deploy to Netlify
 
-on: 
+on:
   push:
     branches:
       - main
-      
-  workflow_dispatch: {}
+  workflow_dispatch:
 
 jobs:
-  build:
-    name: Build
+  build-and-deploy:
     runs-on: ubuntu-latest
+
     steps:
-      # チェックアウト
       - name: Checkout repository
-        uses: actions/checkout@v2
-        with:
-          lfs: true
+        uses: actions/checkout@v4
 
-      # キャッシュ
-      - uses: actions/cache@v4
+      - name: Set up Unity
+        uses: game-ci/unity-actions/setup@v3
         with:
-          path: Library
-          key: Library-${{ hashFiles('Assets/**', 'Packages/**', 'ProjectSettings/**') }}
-          restore-keys: |
-            Library-
+          unityVersion: 2022.3.50f1 # プロジェクトに合わせてUnityバージョンを変更
 
-      # ビルド
-      - name: Build project
-        uses: game-ci/unity-builder@v2
-        env:
-          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
-          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
-          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+      # 必要であればライセンスのアクティベート
+      # - name: Activate Unity License
+      #   uses: game-ci/unity-actions/activate@v3
+      #   with:
+      #     unityLicense: ${{ secrets.UNITY_LICENSE }}
+
+      - name: Build WebGL
+        uses: game-ci/unity-actions/build@v3
         with:
           targetPlatform: WebGL
-          unityVersion: 2022.3.50f1
-          projectPath: TestProject
 
-      # ビルドのアップロード
-      - uses: actions/upload-artifact@v4
-        with:
-          name: Build
-          path: build
-          
-  # NetlifyへのDeploy
-  deploy:
-    name: Deploy
-    needs: build
-    runs-on: ubuntu-latest
+      - name: Install Netlify CLI
+        run: npm install -g netlify-cli
 
-    steps:
-     # チェックアウト
-     - name: Checkout repository
-       uses: actions/checkout@v2
-       
-     # WebGLビルドをダウンロード
-     - name: Download artifact
-       uses: actions/download-artifact@v3
-       with:
-         name: Build
-         path: build
-
-     # Netlifyにデプロイ
-     - name: Deploy to Netlify
-       uses: netlify/actions/cli@master
-       env:
-         NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
-         NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
-       with:
-         args: deploy --prod
+      - name: Deploy to Netlify
+        env:
+          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+          NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
+        run: |
+          netlify deploy --dir=build/WebGL --prod --auth=$NETLIFY_AUTH_TOKEN --site=$NETLIFY_SITE_ID
