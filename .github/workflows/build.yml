@@ -1,0 +1,70 @@
+name: WebGL Build
+
+on: 
+  push:
+    branches:
+      - main
+      
+  workflow_dispatch: {}
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+      # チェックアウト
+      - name: Checkout repository
+        uses: actions/checkout@v2
+        with:
+          lfs: true
+
+      # キャッシュ
+      - uses: actions/cache@v2
+        with:
+          path: Library
+          key: Library-${{ hashFiles('Assets/**', 'Packages/**', 'ProjectSettings/**') }}
+          restore-keys: |
+            Library-
+
+      # ビルド
+      - name: Build project
+        uses: game-ci/unity-builder@v2
+        env:
+          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+        with:
+          targetPlatform: WebGL
+
+      # ビルドのアップロード
+      - uses: actions/upload-artifact@v2
+        with:
+          name: Build
+          path: build
+          
+  # NetlifyへのDeploy
+  deploy:
+    name: Deploy
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+     # チェックアウト
+     - name: Checkout repository
+       uses: actions/checkout@v2
+       
+     # WebGLビルドをダウンロード
+     - name: Download artifact
+       uses: actions/download-artifact@v3
+       with:
+         name: Build
+         path: build
+
+     # Netlifyにデプロイ
+     - name: Deploy to Netlify
+       uses: netlify/actions/cli@master
+       env:
+         NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+         NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
+       with:
+         args: deploy --prod
