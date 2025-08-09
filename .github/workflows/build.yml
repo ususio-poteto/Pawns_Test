@@ -35,7 +35,7 @@ jobs:
           UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
         with:
           targetPlatform: WebGL
-          projectPath: UnityProject
+          projectPath: TestProject
 
       # ビルドのアップロード
       - uses: actions/upload-artifact@v4
