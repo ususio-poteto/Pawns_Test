@@ -1,41 +1,74 @@
-name: Build Unity WebGL and Deploy to Netlify
+name: CICD workflow
 
 on:
-  push:
+  # masterへのPRマージをトリガーとしてワークフローを開始する
+  pull_request:
     branches:
-      - main
-  workflow_dispatch:
+      - master
+    types: [closed]
+
+  # Debug用にActionsメニューからGUIでActionを走らせることを許容する
+  workflow_dispatch: 
+    # 入力欄の定義
+    inputs: 
+      ref:
+        description: "ref"
+        required: false
+        default: ""
+  
+env:
+  target : Dev_Build
 
 jobs:
-  build-and-deploy:
+  build:
+    name: Build my project
+    runs-on: ubuntu-latest
+    steps:
+      # 作業ディレクトリにUnity プロジェクトの中身をダウンロードしてくる
+      - name: Check out my unity project.
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - run: git checkout ${{ github.event.inputs.ref }}
+        if: ${{ github.event.inputs.ref != '' }} # ref が指定されていたら git checkout
+
+      # Build
+      - name: Build project
+        uses: game-ci/unity-builder@v2
+        env:
+          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+        with:
+          targetPlatform: WebGL
+          unityVersion: 2022.3.50f1 # ここは各自プロジェクトに合わせて設定
+          # 独自のビルドメソッドを呼び出したい場合はここで行う。
+          # buildMethod: CustomBuild.DevBuild
+          
+      # Builder で出力した WebGL ビルドをアーティファクトでダウンロード可能にする
+      - name: Upload the WebGL Build
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ env.target }}
+          path: ${{ env.target }}
+          
+  # NetlifyへのDeploy処理
+  deploy:
+    name: Deploy
+    needs: build
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+     # Builder で出力した WebGL ビルドをダウンロード
+     - name: Download artifact
+       uses: actions/download-artifact@v3
+       with:
+         name: ${{ env.target }}
+         path: ${{ env.target }}
 
-      - name: Set up Unity
-        uses: game-ci/unity-actions/setup@v3
-        with:
-          unityVersion: 2022.3.50f1 # プロジェクトに合わせてUnityバージョンを変更
-
-      # 必要であればライセンスのアクティベート
-      # - name: Activate Unity License
-      #   uses: game-ci/unity-actions/activate@v3
-      #   with:
-      #     unityLicense: ${{ secrets.UNITY_LICENSE }}
-
-      - name: Build WebGL
-        uses: game-ci/unity-actions/build@v3
-        with:
-          targetPlatform: WebGL
-
-      - name: Install Netlify CLI
-        run: npm install -g netlify-cli
-
-      - name: Deploy to Netlify
-        env:
-          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
-          NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
-        run: |
-          netlify deploy --dir=build/WebGL --prod --auth=$NETLIFY_AUTH_TOKEN --site=$NETLIFY_SITE_ID
+     # ダウンロードしたビルドファイルをNetlifyへDeploy
+     - name: Deploy to Netlify
+       uses: netlify/actions/cli@master
+       env:
+         NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+         NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
+       with:
+         args: deploy --dir=${{ env.target }} --prod
