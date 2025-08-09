@@ -19,7 +19,7 @@ jobs:
           lfs: true
 
       # キャッシュ
-      - uses: actions/cache@v2
+      - uses: actions/cache@v4
         with:
           path: Library
           key: Library-${{ hashFiles('Assets/**', 'Packages/**', 'ProjectSettings/**') }}
@@ -37,7 +37,7 @@ jobs:
           targetPlatform: WebGL
 
       # ビルドのアップロード
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v4
         with:
           name: Build
           path: build
