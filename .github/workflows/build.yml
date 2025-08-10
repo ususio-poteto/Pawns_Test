@@ -1,74 +1,73 @@
-name: CICD workflow
+name: Build And Deploy WebGL #このワークフローの名前
 
+#ワークフローを始めるトリガー
 on:
-  # masterへのPRマージをトリガーとしてワークフローを開始する
+  workflow_dispatch:  #手動でワークフローを始められる
+  push:               #リポジトリにプッシュしたとき
   pull_request:
+    types: ["closed"] #プルリクエストがクローズされたとき
     branches:
-      - mian
-    types: [closed]
+      - main           #対象ブランチ
 
-  # Debug用にActionsメニューからGUIでActionを走らせることを許容する
-  workflow_dispatch: 
-    # 入力欄の定義
-    inputs: 
-      ref:
-        description: "ref"
-        required: false
-        default: ""
-  
-env:
-  target : Dev_Build
+#ワークフロー内で実行される一連のタスク
+jobs: 
+  ubuntu-build:             #ジョブの名前
+    runs-on: ubuntu-latest  #ワークフロー内の仮想マシンの種類
 
-jobs:
-  build:
-    name: Build my project
-    runs-on: ubuntu-latest
+    permissions:              #ワークフロー対して権限を与えるセクション
+      checks: write           #書き込み権限
+      contents: write         #リポジトリへの書き込み権限
+
     steps:
-      # 作業ディレクトリにUnity プロジェクトの中身をダウンロードしてくる
-      - name: Check out my unity project.
-        uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
-      - run: git checkout ${{ github.event.inputs.ref }}
-        if: ${{ github.event.inputs.ref != '' }} # ref が指定されていたら git checkout
+      - name: Checkout              
+        uses: actions/checkout@v4  #チェックアウトでリポジトリのコードをワークフロー内に取り込む
 
-      # Build
-      - name: Build project
-        uses: game-ci/unity-builder@v2
+      - name: Cache library #キャッシュを作る
+        uses: actions/cache@v4
+        with:
+          path: Library
+          key: Library-${{ hashFiles('Asset/**','Packages/**','ProjectSettings/**') }}
+          restore_keys: |
+            Library-
+
+      - name: Build Project #ここでビルド
+        uses: game-ci/unity-builder@v4  #GameCIのUnity_builderを使用
         env:
           UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
-        with:
-          targetPlatform: WebGL
-          unityVersion: 2022.3.50f1 # ここは各自プロジェクトに合わせて設定
-          # 独自のビルドメソッドを呼び出したい場合はここで行う。
-          # buildMethod: CustomBuild.DevBuild
-          
-      # Builder で出力した WebGL ビルドをアーティファクトでダウンロード可能にする
-      - name: Upload the WebGL Build
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+        with: 
+          targetPlatform: WebGL         #ビルドするプラットフォーム
+          unityVersion: auto            #使用するUnityエディタのバージョン　EditorVersion.txt内に書いている内容
+          projectPath: ./TestProject    #リポジトリのUnityプロジェクトのパス
+
+      - name: Upload artifacts  #ビルドの成果物を保存
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ env.target }}
-          path: ${{ env.target }}
-          
-  # NetlifyへのDeploy処理
-  deploy:
-    name: Deploy
-    needs: build
+          path: build/WebGL 
+
+  ubuntu-deploy:
     runs-on: ubuntu-latest
 
-    steps:
-     # Builder で出力した WebGL ビルドをダウンロード
-     - name: Download artifact
-       uses: actions/download-artifact@v3
-       with:
-         name: ${{ env.target }}
-         path: ${{ env.target }}
+    needs: ubuntu-build
 
-     # ダウンロードしたビルドファイルをNetlifyへDeploy
-     - name: Deploy to Netlify
-       uses: netlify/actions/cli@master
-       env:
-         NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
-         NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
-       with:
-         args: deploy --dir=${{ env.target }} --prod
+    steps: 
+      #チェックアウト
+      - name: checkout repository
+        uses: actions/checkout@v4
+
+      #WebGLビルドのダウンロード
+      - name: Download artifact
+        uses: actions/download-artifact@v4
+        with: 
+          name: WebGL-Build
+          path: build/WebGL
+
+      #Netlifyにデプロイ
+      - name: Deploy to Netlify
+        uses: netlify/actions/cli@v4
+        env:
+          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+          NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
+        with:
+          args: deploy #プレビュー環境にデプロイする
