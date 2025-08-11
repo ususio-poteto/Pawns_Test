@@ -43,7 +43,8 @@ jobs:
       - name: Upload artifacts  #ビルドの成果物を保存
         uses: actions/upload-artifact@v4
         with:
-          path: build/WebGL 
+          name: WebGL-Build
+          path: build/WebGL
 
   ubuntu-deploy:
     runs-on: ubuntu-latest
