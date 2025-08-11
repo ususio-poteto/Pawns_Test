@@ -45,7 +45,7 @@ jobs:
         with:
           name: WebGL-Build
           path: build/WebGL
-
+          
   ubuntu-deploy:
     runs-on: ubuntu-latest
 
@@ -65,8 +65,7 @@ jobs:
 
       
       - name: Install Netlify CLI
-        run: npm install -g netlify-cli
-
+        run: npm install -g netlify-cli --prefix=/usr/local
 
       - name: Deploy to Netlify (action)
         uses: jsmrcaga/action-netlify-deploy@v2.0.0
@@ -75,6 +74,7 @@ jobs:
           NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
           NETLIFY_DEPLOY_TO_PROD: true
           build_directory: build/WebGL
+
       # #Netlifyにデプロイ
       # - name: Deploy to Netlify
       #   uses: netlify/actions/cli@master
