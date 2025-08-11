@@ -27,8 +27,7 @@ jobs:
         with:
           path: Library
           key: Library-${{ hashFiles('Asset/**','Packages/**','ProjectSettings/**') }}
-          restore_keys: |
-            Library-
+          restore_keys: Library-
 
       - name: Build Project #ここでビルド
         uses: game-ci/unity-builder@v4  #GameCIのUnity_builderを使用
@@ -42,7 +41,7 @@ jobs:
           projectPath: ./TestProject    #リポジトリのUnityプロジェクトのパス
 
       - name: Upload artifacts  #ビルドの成果物を保存
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v3
         with:
           path: build/WebGL 
 
