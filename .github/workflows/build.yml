@@ -64,17 +64,11 @@ jobs:
           path: build/WebGL
 
       
-      - name: Install Netlify CLI
-        run: npm install -g netlify-cli --prefix=/usr/local
-
-      - name: Deploy to Netlify (action)
-        uses: jsmrcaga/action-netlify-deploy@v2.0.0
-        with:
+      - name: Deploy to Netlify
+        run: npx netlify-cli deploy --dir=build/WebGL --prod
+        env:
           NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
           NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
-          NETLIFY_DEPLOY_TO_PROD: true
-          build_directory: build/WebGL
-
       # #Netlifyにデプロイ
       # - name: Deploy to Netlify
       #   uses: netlify/actions/cli@master
