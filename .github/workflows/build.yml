@@ -41,7 +41,7 @@ jobs:
           projectPath: ./TestProject    #リポジトリのUnityプロジェクトのパス
 
       - name: Upload artifacts  #ビルドの成果物を保存
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           path: build/WebGL 
 
@@ -62,11 +62,23 @@ jobs:
           name: WebGL-Build
           path: build/WebGL
 
-      #Netlifyにデプロイ
-      - name: Deploy to Netlify
-        uses: netlify/actions/cli@v4
-        env:
+      
+      - name: Install Netlify CLI
+        run: npm install -g netlify-cli
+
+
+      - name: Deploy to Netlify (action)
+        uses: jsmrcaga/action-netlify-deploy@v2.0.0
+        with:
           NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
           NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
-        with:
-          args: deploy #プレビュー環境にデプロイする
+          NETLIFY_DEPLOY_TO_PROD: true
+          build_directory: build/WebGL
+      # #Netlifyにデプロイ
+      # - name: Deploy to Netlify
+      #   uses: netlify/actions/cli@master
+      #   env:
+      #     NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+      #     NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
+      #   with:
+      #     args: deploy #プレビュー環境にデプロイする
