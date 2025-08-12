@@ -38,7 +38,7 @@ jobs:
         with: 
           targetPlatform: WebGL         #ビルドするプラットフォーム
           unityVersion: auto            #使用するUnityエディタのバージョン　EditorVersion.txt内に書いている内容
-          projectPath: ./TestProject    #リポジトリのUnityプロジェクトのパス
+          projectPath: ./PawnsTest    #リポジトリのUnityプロジェクトのパス プロジェクト名を入れる
 
       - name: Upload artifacts  #ビルドの成果物を保存
         uses: actions/upload-artifact@v4
@@ -69,11 +69,4 @@ jobs:
         env:
           NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
           NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
-      # #Netlifyにデプロイ
-      # - name: Deploy to Netlify
-      #   uses: netlify/actions/cli@master
-      #   env:
-      #     NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
-      #     NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
-      #   with:
-      #     args: deploy #プレビュー環境にデプロイする
+    
