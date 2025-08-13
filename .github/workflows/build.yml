@@ -38,7 +38,7 @@ jobs:
         with: 
           targetPlatform: WebGL         #ビルドするプラットフォーム
           unityVersion: auto            #使用するUnityエディタのバージョン　EditorVersion.txt内に書いている内容
-          projectPath: ./PawnsTest    #リポジトリのUnityプロジェクトのパス プロジェクト名を入れる
+          projectPath: .    #リポジトリのUnityプロジェクトのパス プロジェクト名を入れる
 
       - name: Upload artifacts  #ビルドの成果物を保存
         uses: actions/upload-artifact@v4
