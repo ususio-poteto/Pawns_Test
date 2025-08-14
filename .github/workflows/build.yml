@@ -65,14 +65,19 @@ jobs:
 
       
       - name: Deploy to Netlify
-        run: npx netlify-cli deploy --dir=build/WebGL/WebGL --prod
+        id: netlify
+        run: |
+            OUTPUT=$(npx netlify-cli deploy --dir=build/WebGL/WebGL --prod)
+            DEPLOY_URL=$(echo "$OUTPUT" | grep -o 'https://[^ ]*\.netlify\.app' | head -n 1)
+            echo "url=$DEPLOY_URL" >> $GITHUB_OUTPUT
         env:
           NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
           NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
     
       - name: Notify Discord
         run: |
-          curl -H "Content-Type: application/json" \
-               -X POST \
-               -d "{\"content\": \"✅ デプロイ完了: ${{ steps.netlify.outputs.url }}\"}" \
-               ${{ secrets.DISCORD_WEBHOOK_URL }}
+          DEPLOY_URL="${{ steps.netlify.outputs.url }}"
+          curl  -H "Content-Type: application/json" \
+                -X POST \
+                -d "{\"content\": \"✅ デプロイ完了: ${DEPLOY_URL}\"}" \
+                ${{ secrets.DISCORD_WEBHOOK_URL }}
