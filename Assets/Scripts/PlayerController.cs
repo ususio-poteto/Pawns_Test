@@ -5,33 +5,39 @@ using System.Collections.Generic;
 
 public class PlayerController : MonoBehaviour
 {
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
-    [SerializeField] private float catSpeed = 0;
-    public Queue<Vector2> positionHistory = new Queue<Vector2>();
-    [SerializeField] private GameObject partner;
-    private GirlController girlController;
-
+    [SerializeField] private float moveSpeed = 0;
+    [SerializeField] private float jumpForce = 0;
+    private Rigidbody2D rb;
+    [SerializeField] private bool isGrounded;
     private void Awake()
     {
-        positionHistory.Enqueue(new Vector2(transform.position.x, transform.position.y));
-        girlController = partner.GetComponent<GirlController>();
+        rb = GetComponent<Rigidbody2D>();
     }
 
     // Update is called once per frame
     void Update()
     {
-        if (Input.GetKeyUp(KeyCode.RightArrow))
-        {
-            transform.position += new Vector3(catSpeed, 0, 0);
-            positionHistory.Enqueue(transform.position);
-            girlController.FollowPosition(positionHistory.Dequeue());
-        }
+       //横移動
+       float move =  Input.GetAxis("Horizontal");
+       rb.linearVelocity = new Vector2(move * moveSpeed, rb.linearVelocity.y);
+       
+       //ジャンプ
+       if (Input.GetKeyDown(KeyCode.Space) && isGrounded)
+       {
+           rb.AddForce(Vector2.up * jumpForce, ForceMode2D.Impulse);
+       }
+    }
 
-        if (Input.GetKeyUp(KeyCode.LeftArrow))
+    private void OnCollisionEnter2D(Collision2D coll)
+    {
+        if (coll.gameObject.tag == "ground")
         {
-            transform.position += new Vector3(-catSpeed, 0, 0);
-            positionHistory.Enqueue(transform.position);
-            girlController.FollowPosition(positionHistory.Dequeue());
+            isGrounded = true;
         }
+    }
+
+    private void OnCollisionExit2D(Collision2D coll)
+    {
+        isGrounded = false; 
     }
 }
