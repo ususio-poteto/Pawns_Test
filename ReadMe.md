@@ -3,8 +3,7 @@ Unity_Test
 
 ## Overview
 このプロジェクトでは、今後のUnityでの開発で使うであろう機能の試験を行っています。<br>
-例:GitHubPagesを利用したデプロイ・レベルデザインなどの効率化 GitHubCopilotを用いたPRのコードレビューの自動化等<br>
-今後も試したい機能があればこのプロジェクトを使っていきます。<br>
+例:Netlifyを利用したデプロイ・レベルデザインなどの効率化 GitHubCopilotを用いたPRのコードレビューの自動化等<br>
 
 ## Requirement
 OS:Windows11<br>
