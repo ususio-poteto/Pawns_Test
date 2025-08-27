@@ -8,13 +8,14 @@ public class GirlController : MonoBehaviour
     [SerializeField] private int delayFrames = 0;
     [SerializeField] private float moveSpeed = 0;
     [SerializeField] private float offsetX = 0;
-    private float offsetY = 0;
+    private float offsetY;
     [SerializeField] private Queue<Vector3> positionHistory = new Queue<Vector3>();
     private Vector3 lastRecordedPos;
 
-    void awake()
+    void Awake()
     {
         offsetY = target.position.y - transform.position.y ;
+        Debug.Log(offsetY);
     }
     void Update()
     {
