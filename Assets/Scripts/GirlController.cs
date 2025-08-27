@@ -1,25 +1,37 @@
 using System;
 using UnityEngine;
+using System.Collections.Generic;
 
 public class GirlController : MonoBehaviour
 {
-    [SerializeField] private float girlSpeed = 0;
-    private Vector3 position;
-    [SerializeField] private float offset = 0;
+    [SerializeField] private Transform target;
+    [SerializeField] private int delayFrames = 0;
+    [SerializeField] private float moveSpeed = 0;
+    [SerializeField] private float offsetX = 0;
+    private float offsetY = 0;
+    [SerializeField] private Queue<Vector3> positionHistory = new Queue<Vector3>();
+    private Vector3 lastRecordedPos;
 
-    private void Awake()
+    void awake()
     {
-        position = transform.position;
+        offsetY = target.position.y - transform.position.y ;
     }
+    void Update()
+    {
+        // 必ず記録する
+        positionHistory.Enqueue(target.position);
 
-    private void Update()
-    {
-        transform.position = Vector3.MoveTowards(transform.position, position, girlSpeed * Time.deltaTime);
-    }
-    public void FollowPosition(Vector3 targetPosition)
-    {
-        position.x = targetPosition.x - offset;
-        position.y = -1.75f;
-        position.z = 0;
+        if (positionHistory.Count > delayFrames)
+        {
+            Vector3 nextPos = positionHistory.Dequeue();
+            nextPos.x -= offsetX;
+            nextPos.y -= offsetY;
+
+            // もし同じ位置なら動かない
+            if ((nextPos - transform.position).sqrMagnitude > 0.0001f)
+            {
+                transform.position = Vector3.MoveTowards(transform.position, nextPos, moveSpeed * Time.deltaTime);
+            }
+        }
     }
 }
