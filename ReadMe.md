@@ -11,5 +11,5 @@ OS:Windows11<br>
 CPU:intel Core i7-12650H<br>
 Memory:32GB<br>
 GPU:NVIDIA GeForce RTX4060Laptop<br>
-GameEngine:Unity 6000.1.13f1<br>
+GameEngine:Unity 6000.0.54f1<br>
 Editor:Rider<br>
